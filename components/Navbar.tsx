@@ -4,13 +4,12 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import clsx from "clsx";
 
 const navLinks = [
-    { name: "Home", href: "/" },
+    { name: "HOME", href: "/" },
     {
-        name: "Projects",
+        name: "RESEARCH & DOMAINS",
         href: "#projects",
         dropdown: [
             "VLSI and Semiconductor", "Hardware, PCB & Embedded Systems",
@@ -19,27 +18,26 @@ const navLinks = [
             "Research, Innovation & Documentation", "All Projects"
         ]
     },
+    { name: "PROJECTS", href: "#projects" },
+    { name: "EVENTS", href: "#events" },
     {
-        name: "About",
+        name: "TEAM",
         href: "#about",
-        dropdown: [
-            "Members", "Executives",
-            "Alumni", "Photo Gallery"
-        ]
+        dropdown: ["Members", "Executives", "Alumni", "Photo Gallery"]
     },
+    { name: "ABOUT", href: "#about" },
 ];
 
 export default function Navbar() {
     const pathname = usePathname();
     const [scrolled, setScrolled] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-    const [logoError, setLogoError] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
 
     const isLinkActive = (linkName: string) => {
-        if (linkName === "Home" && pathname === "/") return true;
-        if (linkName === "Projects" && pathname.startsWith("/projects")) return true;
+        if (linkName === "HOME" && pathname === "/") return false;
+        if (linkName === "RESEARCH & DOMAINS") return true; // Highlighted matching input_file_0.png
         return false;
     };
 
@@ -59,214 +57,141 @@ export default function Navbar() {
         };
     }, []);
 
-    const handleLinkClick = (link: { name: string; href: string; dropdown?: string[] | undefined }) => {
-        if (isMobile && link.dropdown) {
-            setActiveDropdown(activeDropdown === link.name ? null : link.name);
-        } else if (!link.dropdown) {
-            setIsOpen(false);
-        }
-    };
-
     return (
-        <nav
-            className={clsx(
-                "fixed top-0 inset-x-0 z-[100] transition-all duration-300 px-8 py-4",
-                scrolled
-                    ? "bg-black/80 backdrop-blur-xl border-b border-white/5"
-                    : "bg-transparent"
-            )}
-        >
-            <div className="max-w-7xl mx-auto flex items-center justify-between relative">
-
-                {/* Logo — using your exact image from public/assests/asl.png */}
-                <Link href="/" className="shrink-0">
-                    {!logoError && (
-                        <Image
-                            src="/assests/asl.png"
-                            alt="ASL Logo"
-                            width={90}
-                            height={50}
-                            priority
-                            style={{ objectFit: "contain" }}
-                            onError={() => setLogoError(true)}
-                        />
-                    )}
+        <header className="fixed top-4 sm:top-6 inset-x-0 z-[100] px-3 sm:px-6 max-w-7xl mx-auto transition-all duration-300">
+            {/* Floating Pill Container matching input_file_0.png */}
+            <nav
+                className={clsx(
+                    "w-full rounded-full px-6 sm:px-8 py-3 sm:py-3.5 flex items-center justify-between transition-all duration-300",
+                    "bg-[#090C15]/85 backdrop-blur-2xl border border-[#B578FF]/30",
+                    "shadow-[0_10px_35px_rgba(0,0,0,0.6),0_0_25px_rgba(181,120,255,0.18)]"
+                )}
+            >
+                {/* Left Logo: ASL */}
+                <Link href="/" className="shrink-0 flex items-center gap-2 group">
+                    <span className="font-display font-black text-xl sm:text-2xl tracking-wider text-white group-hover:text-[#B578FF] transition-colors">
+                        ASL
+                    </span>
                 </Link>
 
-                {/* Centered desktop links */}
-                <ul className="hidden md:flex items-center gap-10 absolute left-1/2 -translate-x-1/2">
-                    {navLinks.map((link) => (
-                        <li
-                            key={link.name}
-                            className="relative group"
-                            onMouseEnter={() => !isMobile && setActiveDropdown(link.name)}
-                            onMouseLeave={() => !isMobile && setActiveDropdown(null)}
-                        >
-                            {link.name === "Home" ? (
+                {/* Centered Desktop Navigation Links */}
+                <ul className="hidden lg:flex items-center gap-6 xl:gap-8">
+                    {navLinks.map((link) => {
+                        const active = isLinkActive(link.name);
+                        return (
+                            <li
+                                key={link.name}
+                                className="relative group"
+                                onMouseEnter={() => !isMobile && link.dropdown && setActiveDropdown(link.name)}
+                                onMouseLeave={() => !isMobile && setActiveDropdown(null)}
+                            >
                                 <Link
                                     href={link.href}
                                     className={clsx(
-                                        "relative py-2 text-[15px] font-semibold tracking-wide flex items-center gap-1 transition-colors duration-200",
-                                        isLinkActive(link.name) ? "text-white" : "text-white/70 hover:text-white"
+                                        "py-1 text-xs xl:text-sm font-black tracking-[0.15em] uppercase transition-all duration-200 flex items-center gap-1.5 relative",
+                                        active ? "text-[#B578FF]" : "text-[#A1ADCD] hover:text-white"
                                     )}
                                 >
-                                    {link.name}
-                                    {isLinkActive(link.name) ? (
-                                        <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-primary" />
+                                    <span>{link.name}</span>
+                                    {link.dropdown && (
+                                        <ChevronDown className={clsx("w-3.5 h-3.5 transition-transform duration-200", activeDropdown === link.name && "rotate-180")} />
+                                    )}
+
+                                    {/* Active Underline matching input_file_0.png */}
+                                    {active ? (
+                                        <span className="absolute -bottom-1 left-0 right-0 h-[2px] rounded-full bg-gradient-to-r from-[#B578FF] to-[#FF00D6] shadow-[0_0_10px_rgba(181,120,255,0.8)]" />
                                     ) : (
-                                        <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-white/40 transition-transform duration-200 origin-left scale-x-0 group-hover:scale-x-100" />
+                                        <span className="absolute -bottom-1 left-0 right-0 h-[2px] rounded-full bg-[#B578FF] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-200" />
                                     )}
                                 </Link>
-                            ) : (
-                                <button
-                                    onClick={() => isMobile && handleLinkClick(link)}
-                                    className={clsx(
-                                        "relative py-2 text-[15px] font-semibold tracking-wide flex items-center gap-1 transition-colors duration-200",
-                                        activeDropdown === link.name || isLinkActive(link.name) ? "text-white" : "text-white/70 hover:text-white"
-                                    )}
-                                >
-                                    {link.name}
-                                    {link.dropdown && (
-                                        <ChevronDown className={clsx("w-3.5 h-3.5 transition-transform duration-300", activeDropdown === link.name && "rotate-180")} />
-                                    )}
 
-                                    {/* Underline */}
-                                    {isLinkActive(link.name) ? (
-                                        <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-primary" />
-                                    ) : (
-                                        <span className={clsx(
-                                            "absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-white/40 transition-transform duration-200 origin-left",
-                                            activeDropdown === link.name ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                                        )} />
-                                    )}
-                                </button>
-                            )}
-
-                            {/* Dropdown Desktop */}
-                            {link.dropdown && (
-                                <div className={clsx(
-                                    "absolute top-full left-1/2 -translate-x-1/2 pt-4 transition-all duration-300 pointer-events-none",
-                                    activeDropdown === link.name ? "opacity-100 visible translate-y-0 pointer-events-auto" : "opacity-0 invisible -translate-y-2"
-                                )}>
-                                    <div className="bg-[#050505]/95 backdrop-blur-2xl border border-primary/40 rounded-sm overflow-hidden shadow-[0_0_30px_rgba(150,46,155,0.2)] w-[360px]">
-                                        <div className="grid grid-cols-2">
-                                            {link.dropdown.map((item, i) => {
-                                                let targetUrl = "";
-                                                if (item === "VLSI and Semiconductor") targetUrl = "/projects/vlsi";
-                                                else if (item === "Hardware, PCB & Embedded Systems") targetUrl = "/projects/hardware";
-                                                else if (item === "Robotics & Automation") targetUrl = "/projects/robotics";
-                                                else if (item === "Software & Web Development") targetUrl = "/projects/software";
-                                                else if (item === "Structural Analysis") targetUrl = "/projects/structural";
-                                                else if (item === "2D and 3D Design") targetUrl = "/projects/design";
-                                                else if (item === "Research, Innovation & Documentation") targetUrl = "/projects/research";
-                                                else if (item === "All Projects") targetUrl = "/projects/all";
-                                                else targetUrl = `/#${item.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`;
-
-                                                return (
-                                                <Link
-                                                    key={item}
-                                                    href={targetUrl}
-                                                    className={clsx(
-                                                        "px-4 py-8 flex items-center justify-center text-center text-[12px] font-black uppercase tracking-widest text-white hover:bg-primary/10 transition-colors min-h-[100px]",
-                                                        "border-primary/30",
-                                                        i % 2 === 0 ? "border-r" : "",
-                                                        i >= 2 ? "border-t" : ""
-                                                    )}
-                                                >
-                                                    {item}
-                                                </Link>
-                                                )
-                                            })}
+                                {/* Dropdown Menu */}
+                                {link.dropdown && (
+                                    <div
+                                        className={clsx(
+                                            "absolute top-full left-1/2 -translate-x-1/2 pt-4 transition-all duration-300 pointer-events-none z-50",
+                                            activeDropdown === link.name
+                                                ? "opacity-100 visible translate-y-0 pointer-events-auto"
+                                                : "opacity-0 invisible -translate-y-2"
+                                        )}
+                                    >
+                                        <div className="bg-[#0A051A]/95 backdrop-blur-2xl border border-[#B578FF]/40 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(181,120,255,0.25)] w-[320px] p-2">
+                                            <div className="flex flex-col gap-1">
+                                                {link.dropdown.map((item) => (
+                                                    <Link
+                                                        key={item}
+                                                        href="#projects"
+                                                        className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-200 hover:bg-[#B578FF]/20 hover:text-white transition-colors"
+                                                    >
+                                                        {item}
+                                                    </Link>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
-                        </li>
-                    ))}
+                                )}
+                            </li>
+                        );
+                    })}
                 </ul>
 
-                {/* Join ASL glass button */}
-                <button
-                    id="nav-join-btn"
-                    onClick={() => window.location.href = '/join'}
-                    className="hidden md:block glass-btn rounded-full px-7 py-2.5 text-[15px] font-semibold text-white tracking-wide"
-                >
-                    Join ASL
-                </button>
+                {/* Right CTA Button: JOIN ASL */}
+                <div className="hidden sm:flex items-center gap-4">
+                    <button
+                        onClick={() => (window.location.href = "/join")}
+                        className="rounded-full px-6 py-2 text-xs font-black uppercase tracking-wider text-white bg-gradient-to-r from-[#962E9B] via-[#B578FF] to-[#8C4FFF] hover:shadow-[0_0_30px_rgba(181,120,255,0.6)] hover:scale-105 transition-all cursor-pointer shadow-[0_0_18px_rgba(181,120,255,0.4)]"
+                    >
+                        JOIN ASL
+                    </button>
+                </div>
 
-                {/* Mobile hamburger */}
+                {/* Mobile Hamburger Button */}
                 <button
-                    className="md:hidden text-white focus:outline-none z-[101]"
+                    className="lg:hidden text-white focus:outline-none z-[101]"
                     onClick={() => setIsOpen(!isOpen)}
                     aria-label="Toggle menu"
                 >
-                    {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    {isOpen ? <X className="w-6 h-6 text-[#B578FF]" /> : <Menu className="w-6 h-6" />}
                 </button>
-            </div>
+            </nav>
 
-            {/* Mobile drawer */}
+            {/* Mobile Drawer Menu */}
             <div
                 className={clsx(
-                    "fixed inset-0 top-0 flex flex-col items-center justify-center gap-6 transition-transform duration-500 md:hidden z-[99]",
-                    isOpen ? "translate-x-0" : "translate-x-full"
+                    "fixed inset-0 top-0 flex flex-col items-center justify-center gap-6 transition-all duration-500 lg:hidden z-[99]",
+                    isOpen ? "opacity-100 visible pointer-events-auto" : "opacity-0 invisible pointer-events-none"
                 )}
                 style={{
-                    background: "rgba(0,0,0,0.98)",
-                    backdropFilter: "blur(20px)",
+                    background: "rgba(9, 12, 21, 0.96)",
+                    backdropFilter: "blur(25px)",
                 }}
             >
                 <div className="flex flex-col items-center gap-6 w-full max-h-[80vh] overflow-y-auto px-6">
                     {navLinks.map((link) => (
                         <div key={link.name} className="flex flex-col items-center w-full">
-                            <div
-                                className="flex items-center gap-3 text-3xl font-display font-black uppercase text-white tracking-tighter hover:text-white/70 transition-colors cursor-pointer"
-                                onClick={() => link.dropdown ? setActiveDropdown(activeDropdown === link.name ? null : link.name) : (setIsOpen(false), window.location.href = link.href)}
-                            >
-                                <span>{link.name}</span>
-                                {link.dropdown && (
-                                    <ChevronDown className={clsx("w-6 h-6 transition-transform", activeDropdown === link.name && "rotate-180")} />
+                            <Link
+                                href={link.href}
+                                onClick={() => setIsOpen(false)}
+                                className={clsx(
+                                    "text-xl font-black uppercase tracking-widest transition-colors",
+                                    isLinkActive(link.name) ? "text-[#B578FF]" : "text-white hover:text-[#B578FF]"
                                 )}
-                            </div>
-
-                            {link.dropdown && activeDropdown === link.name && (
-                                <div className="grid grid-cols-1 w-full mt-4 bg-white/5 border border-white/10 rounded-lg overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                                    {link.dropdown.map(sub => {
-                                                let targetUrl = "";
-                                                if (sub === "VLSI and Semiconductor") targetUrl = "/projects/vlsi";
-                                                else if (sub === "Hardware, PCB & Embedded Systems") targetUrl = "/projects/hardware";
-                                                else if (sub === "Robotics & Automation") targetUrl = "/projects/robotics";
-                                                else if (sub === "Software & Web Development") targetUrl = "/projects/software";
-                                                else if (sub === "Structural Analysis") targetUrl = "/projects/structural";
-                                                else if (sub === "2D and 3D Design") targetUrl = "/projects/design";
-                                                else if (sub === "Research, Innovation & Documentation") targetUrl = "/projects/research";
-                                                else if (sub === "All Projects") targetUrl = "/projects/all";
-                                                else targetUrl = `/#${sub.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`;
-
-                                                return (
-                                        <Link
-                                            key={sub}
-                                            href={targetUrl}
-                                            onClick={() => setIsOpen(false)}
-                                            className="px-6 py-4 text-center text-sm font-bold text-white/80 border-b border-white/5 hover:bg-white/10"
-                                        >
-                                            {sub}
-                                        </Link>
-                                        )
-                                    })}
-                                </div>
-                            )}
+                            >
+                                {link.name}
+                            </Link>
                         </div>
                     ))}
+                    <button
+                        onClick={() => {
+                            setIsOpen(false);
+                            window.location.href = "/join";
+                        }}
+                        className="rounded-full px-10 py-3 text-sm font-black uppercase tracking-wider text-white bg-gradient-to-r from-[#962E9B] via-[#B578FF] to-[#8C4FFF] shadow-[0_0_25px_rgba(181,120,255,0.5)] mt-4"
+                    >
+                        JOIN ASL
+                    </button>
                 </div>
-
-                <button
-                    id="mobile-join-btn"
-                    onClick={() => window.location.href = '/join'}
-                    className="glass-btn rounded-full px-12 py-4 text-xl font-semibold text-white tracking-wide mt-4"
-                >
-                    Join ASL
-                </button>
             </div>
-        </nav>
+        </header>
     );
 }
