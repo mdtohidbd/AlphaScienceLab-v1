@@ -8,52 +8,16 @@ import Link from "next/link";
 import { usePreloader } from "./PreloaderContext";
 
 /* Splits a string into individual letter <span>s */
-function SplitText({ text, className, useSmallCaps }: { text: string; className?: string; useSmallCaps?: boolean }) {
-    if (!useSmallCaps) {
-        return (
-            <>
-                {text.split("").map((char, i) => (
-                    <span
-                        key={i}
-                        className={`letter-char ${className ?? ""}`}
-                        style={{ display: "inline-block", whiteSpace: char === " " ? "pre" : "normal" }}
-                    >
-                        {char === " " ? "\u00A0" : char}
-                    </span>
-                ))}
-            </>
-        );
-    }
-
-    /* Small Caps Logic: First letter of each word remains 1em, others are 0.72em */
-    /* All bottom-aligned to the baseline */
-    const words = text.split(" ");
+function SplitText({ text, className }: { text: string; className?: string }) {
     return (
         <>
-            {words.map((word, wIdx) => (
-                <span key={wIdx} style={{ display: "inline-block", whiteSpace: "nowrap", verticalAlign: "baseline" }}>
-                    {word.split("").map((char, lIdx) => {
-                        const isFirst = lIdx === 0;
-                        return (
-                            <span
-                                key={lIdx}
-                                className={`letter-char ${className ?? ""}`}
-                                style={{
-                                    display: "inline-block",
-                                    fontSize: isFirst ? "1em" : "0.72em",
-                                    verticalAlign: "baseline"
-                                }}
-                            >
-                                {char}
-                            </span>
-                        );
-                    })}
-                    {/* Add non-breaking space after word if not the last word */}
-                    {wIdx < words.length - 1 && (
-                        <span className={`letter-char ${className ?? ""}`} style={{ display: "inline-block", verticalAlign: "baseline" }}>
-                            &nbsp;
-                        </span>
-                    )}
+            {text.split("").map((char, i) => (
+                <span
+                    key={i}
+                    className={`letter-char ${className ?? ""}`}
+                    style={{ display: "inline-block", whiteSpace: char === " " ? "pre" : "normal" }}
+                >
+                    {char === " " ? "\u00A0" : char}
                 </span>
             ))}
         </>
@@ -97,69 +61,19 @@ export default function Hero() {
 
     useGSAP(
         () => {
-            /* ── initial state — everything hidden ── */
-            gsap.set([".hero-strip", ".hero-btns"], { opacity: 0 });
-            gsap.set(".hero-kicker", { opacity: 1 }); // container visible; letters control visibility
-            gsap.set("#hero-from-belief", { opacity: 1 });
+            if (!container.current) return;
+            const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-            /* ── set letters invisible before animating ── */
-            gsap.set(".title-word .letter-char", {
-                opacity: 0,
-                y: 60,
-                filter: "blur(20px)",
-                rotationX: -50,
-            });
-
-            /* ── kicker & belief letters: start clean but hidden for first run ── */
-            gsap.set([".kicker-char", ".belief-char"], {
-                opacity: 0,
-                x: -22,
-                filter: "blur(8px)",
-                display: "inline-block"
-            });
-
-            if (!preloaderFinished) return;
-
-            /* ════════════════════════════════════════
-               INTRO — plays once on page load
-             ════════════════════════════════════════ */
-            const intro = gsap.timeline({
-                defaults: { ease: "expo.out" },
-            });
-
-            /* ① ALPHA letters cascade in */
-            intro.to(
-                "#word-alpha .letter-char",
-                { opacity: 1, y: 0, filter: "blur(0px)", rotationX: 0, duration: 0.75, stagger: { each: 0.085, ease: "expo.out" }, delay: 0.3 }
+            tl.fromTo(
+                "#word-alpha",
+                { opacity: 0, y: 40 },
+                { opacity: 1, y: 0, duration: 0.8 }
+            ).fromTo(
+                ".hero-btn",
+                { opacity: 0, scale: 0.9 },
+                { opacity: 1, scale: 1, stagger: 0.15, duration: 0.6 },
+                "-=0.4"
             );
-
-            /* ② SCIENCE letters follow */
-            intro.to(
-                "#word-science .letter-char",
-                { opacity: 1, y: 0, filter: "blur(0px)", rotationX: 0, duration: 0.75, stagger: { each: 0.07, ease: "expo.out" } },
-                "-=0.2"
-            );
-
-            /* ③ LAB lands last */
-            intro.to(
-                "#word-lab .letter-char",
-                { opacity: 1, y: 0, filter: "blur(0px)", rotationX: 0, duration: 0.75, stagger: { each: 0.11, ease: "expo.out" } },
-                "-=0.25"
-            );
-
-            /* ④ When LAB is done, reveal subtext CLEAN for the first load */
-            intro.to([".kicker-char", ".belief-char"], {
-                opacity: 1,
-                x: 0,
-                filter: "blur(0px)",
-                duration: 0.8,
-                stagger: { each: 0.05, ease: "expo.out" },
-                ease: "expo.out",
-            }, "+=0.15");
-
-            /* ⑤ Strip and buttons ease in last */
-            intro.to(".hero-strip", { opacity: 1, duration: 0.65 }, "-=0.2");
-            intro.to(".hero-btns", { opacity: 1, duration: 0.65 }, "-=0.4");
         },
         { scope: container, dependencies: [preloaderFinished] }
     );
@@ -168,206 +82,111 @@ export default function Hero() {
         <section
             ref={container}
             suppressHydrationWarning
-            className="relative w-full min-h-screen bg-black overflow-hidden"
+            className="relative w-full min-h-screen bg-transparent overflow-hidden"
         >
-            {/* Background Image with Overlay */}
+            {/* ── 1. High-Tech Background Image & Quantum Chamber Render ── */}
             <div className="absolute inset-0 z-0">
                 <Image
-                    src="/projects/hero_img.png"
-                    alt="ASL Laboratory"
+                    src="/hero_quantum_chamber.png"
+                    alt="ASL Quantum Chamber Laboratory"
                     fill
-                    className="object-cover opacity-100"
+                    className="object-cover object-right opacity-90"
                     priority
                 />
-                {/* Subtle edge vignetting instead of heavy overlays */}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                {/* Enhanced Ambient Glow - Pink/Red vibe for Image 2 design */}
-                <div className="absolute bottom-0 left-1/3 -translate-x-1/2 w-[900px] h-[800px] bg-[#FF0F5B] rounded-full blur-[250px] opacity-25 translate-y-1/4" />
+
+                {/* Subtle dark gradient vignetting to keep text ultra readable */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0A041A] via-[#0A041A]/75 to-transparent md:w-[65%]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0A041A] via-transparent to-[#0A041A]/40" />
+
+                {/* Left Background Neon Orbital Ring (Matching input_file_0.png) */}
+                <div className="absolute top-1/2 left-[-10vw] -translate-y-1/2 w-[55vw] h-[55vw] rounded-full border-2 border-[#00F0FF]/35 shadow-[0_0_100px_rgba(0,240,255,0.3)] pointer-events-none hidden md:block" />
+                <div className="absolute top-1/2 left-[-8vw] -translate-y-1/2 w-[50vw] h-[50vw] rounded-full border border-dashed border-[#FF00D6]/30 pointer-events-none hidden md:block" />
+                
+                {/* Magenta Energy Glow Behind Title */}
+                <div className="absolute top-1/3 left-1/4 -translate-x-1/2 w-[500px] h-[500px] bg-[#FF00D6] rounded-full blur-[180px] opacity-25 pointer-events-none" />
             </div>
 
-            {/* ── Main content ── */}
+            {/* ── 2. Main Content Container ── */}
             <div
-                className="relative flex flex-col items-start justify-center text-left z-10 w-full"
-                style={{
-                    minHeight: "100svh",
-                    paddingTop: "clamp(90px, 12vh, 140px)",
-                    paddingBottom: "clamp(48px, 6vh, 100px)",
-                    paddingLeft: "clamp(20px, 6vw, 160px)",
-                    paddingRight: "clamp(20px, 6vw, 160px)",
-                }}
+                className="relative flex flex-col items-start justify-center text-left z-10 w-full max-w-[1440px] mx-auto min-h-screen px-6 sm:px-12 lg:px-20 pt-28 pb-16"
             >
-                {/* ① Kicker — letter-by-letter from left */}
-                <p
-                    className="hero-kicker font-accent leading-none mb-4"
-                    style={{
-                        fontSize: "clamp(14px, 3.2vw, 60px)",
-                        lineHeight: 0.9,
-                        letterSpacing: "0.02em",
-                        textTransform: "uppercase",
-                        overflow: "hidden",
-                        color: "transparent",
-                        WebkitTextStroke: "clamp(1px, 0.15vw, 2px) white",
-                        paddingLeft: "clamp(30px, 8vw, 120px)"
-                    }}
-                >
-                    <SplitText text="CREATIVITY STARTS" className="kicker-char" useSmallCaps />
-                </p>
-
-                {/* ② Headline block */}
-                <div className="flex flex-col items-start w-full" style={{ gap: 0, marginBottom: "clamp(14px, 2vh, 32px)" }}>
-
-                    {/* Row 1: ALPHA + FROM BELIEF */}
-                    <div className="flex flex-wrap items-end justify-start" style={{ gap: "clamp(6px, 1.5vw, 48px)" }}>
+                {/* Headline Block */}
+                <div className="flex flex-col items-start w-full space-y-2 mb-6">
+                    
+                    {/* Top Tag: ALPHA + Bakbak One Font Label */}
+                    <div className="flex flex-wrap items-baseline gap-4">
                         <h1
                             id="word-alpha"
-                            className="title-word font-display uppercase text-white m-0 p-0"
-                            style={{
-                                fontSize: "clamp(44px, 10vw, 158px)",
-                                lineHeight: 0.82,
-                                letterSpacing: "-0.01em",
-                                perspective: "600px",
-                            }}
+                            className="font-display font-black uppercase text-white tracking-tight leading-none text-5xl sm:text-7xl md:text-8xl lg:text-9xl drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                         >
                             <SplitText text="ALPHA" />
                         </h1>
-                        <span
-                            id="hero-from-belief"
-                            className="font-accent"
-                            style={{
-                                fontSize: "clamp(14px, 3.2vw, 60px)",
-                                lineHeight: 0.9,
-                                paddingBottom: "clamp(4px, 0.6vw, 14px)",
-                                textTransform: "uppercase",
-                                overflow: "hidden",
-                                color: "transparent",
-                                WebkitTextStroke: "clamp(1px, 0.15vw, 2px) white",
-                            }}
-                        >
-                            <SplitText text="FROM BELIEF" className="belief-char" useSmallCaps />
+                        <span className="font-tech text-xs sm:text-sm font-bold uppercase tracking-widest text-[#00F0FF] px-3 py-1 bg-[#00F0FF]/10 border border-[#00F0FF]/40 rounded-full shadow-[0_0_15px_rgba(0,240,255,0.3)]">
+                            Bakbak One
                         </span>
                     </div>
 
-                    {/* Row 2: SCIENCE LAB — split into two words for independent stagger */}
-                    <div className="flex flex-wrap items-end justify-start" style={{ gap: "clamp(10px, 2vw, 52px)" }}>
+                    {/* Row 2: SCIENCE + LAB (with vibrant Magenta text) */}
+                    <div className="flex flex-wrap items-baseline gap-4 sm:gap-6">
                         <h1
                             id="word-science"
-                            className="title-word font-display uppercase text-white m-0 p-0"
-                            style={{
-                                fontSize: "clamp(44px, 10vw, 158px)",
-                                lineHeight: 0.82,
-                                letterSpacing: "-0.01em",
-                                perspective: "600px",
-                            }}
+                            className="font-display font-black uppercase text-white tracking-tight leading-none text-5xl sm:text-7xl md:text-8xl lg:text-9xl drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                         >
                             <SplitText text="SCIENCE" />
                         </h1>
                         <h1
                             id="word-lab"
-                            className="title-word font-display uppercase text-white m-0 p-0"
-                            style={{
-                                fontSize: "clamp(44px, 10vw, 158px)",
-                                lineHeight: 0.82,
-                                letterSpacing: "-0.01em",
-                                perspective: "600px",
-                            }}
+                            className="font-display font-black uppercase text-[#FF00D6] tracking-tight leading-none text-5xl sm:text-7xl md:text-8xl lg:text-9xl drop-shadow-[0_0_40px_rgba(255,0,214,0.6)]"
                         >
                             <SplitText text="LAB" />
                         </h1>
                     </div>
                 </div>
 
-                {/* ③ Subtitle strip — full-width bleed with dual-gradient Figma shading */}
-                <div
-                    className="hero-strip subtitle-strip relative flex items-center justify-center w-screen overflow-hidden"
-                    style={{
-                        marginTop: "clamp(24px, 4vh, 80px)",
-                        marginBottom: "clamp(24px, 4vh, 80px)",
-                        marginLeft: "50%",
-                        transform: "translateX(-50%)",
-                        padding: "clamp(14px, 2vh, 28px) 0",
-                        background: "linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.15) 65%, transparent 100%)",
-                        borderTop: "1px solid transparent",
-                        borderBottom: "1px solid transparent",
-                        borderImage: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 35%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.1) 65%, transparent 100%) 1",
-                        backdropFilter: "blur(12px)",
-                    }}
-                >
-                    <p
-                        className="relative z-20 font-tech text-center m-0"
-                        style={{
-                            fontSize: "clamp(14px, 1.8vw, 32px)",
-                            lineHeight: 0.73,
-                            fontWeight: 400,
-                            letterSpacing: "-0.06em",
-                            color: "#e4e4e7",
-                        }}
-                    >
-                        Innovating in VLSI, Robotics, Software, and Design
+                {/* Subtitle Telemetry Line */}
+                <div className="w-full max-w-2xl border-t border-b border-white/10 py-3 my-4 backdrop-blur-md bg-black/20 rounded-xl px-4">
+                    <p className="font-tech text-xs sm:text-sm md:text-base text-slate-300 tracking-wide uppercase flex items-center justify-between flex-wrap gap-2">
+                        <span>Transformative Scientific Innovations</span>
+                        <span className="text-[#00F0FF] font-bold">/ High Quantum Throughput</span>
                     </p>
                 </div>
 
-                {/* ④ CTA Buttons */}
-                <div
-                    className="hero-btns relative flex items-center justify-center flex-wrap w-full"
-                    style={{
-                        gap: "clamp(12px, 2.5vw, 40px)",
-                        marginTop: "clamp(20px, 4vh, 60px)",
-                    }}
-                >
+                {/* CTA Buttons ("Explore Now" and "Meet More") */}
+                <div className="flex items-center gap-4 sm:gap-6 mt-8 flex-wrap">
                     <button
-                        className="hero-btn glass-btn font-sans font-semibold text-white flex items-center justify-center relative z-40"
+                        className="hero-btn glass-btn font-sans font-black uppercase tracking-widest text-white px-8 sm:px-12 py-4 sm:py-5 rounded-full text-sm sm:text-base bg-white/10 border-2 border-white/40 hover:border-[#00F0FF] shadow-[0_0_30px_rgba(0,240,255,0.3)] hover:shadow-[0_0_50px_rgba(0,240,255,0.6)] transition-all cursor-pointer"
                         onMouseEnter={() => !isMobile && handleInteraction("projects")}
                         onMouseLeave={() => !isMobile && handleInteraction(null)}
-                        style={{
-                            width: "clamp(180px, 28vw, 420px)",
-                            height: "clamp(48px, 5.2vw, 84px)",
-                            borderRadius: "50px",
-                            fontSize: "clamp(14px, 2vw, 35.84px)",
-                        }}
                     >
-                        Explore projects
+                        Explore Now
                     </button>
+
                     <button
-                        className="hero-btn glass-btn font-sans font-semibold text-white flex items-center justify-center relative z-40"
+                        className="hero-btn glass-btn font-sans font-black uppercase tracking-widest text-white px-8 sm:px-12 py-4 sm:py-5 rounded-full text-sm sm:text-base bg-[#FF00D6]/10 border-2 border-[#FF00D6]/50 hover:border-[#FF00D6] shadow-[0_0_30px_rgba(255,0,214,0.4)] hover:shadow-[0_0_50px_rgba(255,0,214,0.7)] transition-all cursor-pointer"
                         onMouseEnter={() => !isMobile && handleInteraction("team")}
                         onMouseLeave={() => !isMobile && handleInteraction(null)}
-                        style={{
-                            width: "clamp(180px, 28vw, 420px)",
-                            height: "clamp(48px, 5.2vw, 84px)",
-                            borderRadius: "50px",
-                            fontSize: "clamp(14px, 2vw, 35.84px)",
-                        }}
                     >
-                        Meet the team
+                        Meet More
                     </button>
+                </div>
 
-
-                    {/* Popover Grid: CATEGORIES */}
-                    <div
-                        className={`absolute top-full left-1/2 -translate-x-1/2 w-full max-w-[90vw] md:max-w-[1200px] mt-8 bg-black z-50 overflow-hidden transition-all duration-500 pointer-events-none ${activeGrid ? "opacity-100 translate-y-0 scale-100 pointer-events-auto" : "opacity-0 -translate-y-4 scale-95"}`}
-                        style={{
-                            border: "1px solid rgba(150, 46, 155, 0.4)",
-                            boxShadow: "0 0 60px rgba(150, 46, 155, 0.2)",
-                        }}
-                    >
-                        <div className="grid grid-cols-1 md:grid-cols-2">
-                            {(activeGrid === "projects" ? PROJECT_CATEGORIES : TEAM_CATEGORIES).map((cat, i) => (
-                                <Link
-                                    key={i}
-                                    href={cat.href}
-                                    className="p-8 flex items-center justify-center text-center font-tech text-white/90 cursor-pointer hover:bg-white/5 transition-colors border-[0.5px] border-[#962E9B]/30"
-                                    style={{
-                                        fontSize: "clamp(12px, 1.4vw, 24px)",
-                                        minHeight: "100px",
-                                    }}
-                                >
-                                    {cat.name}
-                                </Link>
-                            ))}
-                        </div>
+                {/* Popover Category Grid */}
+                <div
+                    className={`w-full max-w-4xl mt-8 bg-[#0C051E]/95 backdrop-blur-2xl border border-[#FF00D6]/40 rounded-2xl overflow-hidden transition-all duration-500 shadow-[0_0_50px_rgba(255,0,214,0.25)] ${activeGrid ? "opacity-100 translate-y-0 scale-100 pointer-events-auto" : "opacity-0 -translate-y-4 scale-95 pointer-events-none hidden"}`}
+                >
+                    <div className="grid grid-cols-1 sm:grid-cols-2">
+                        {(activeGrid === "projects" ? PROJECT_CATEGORIES : TEAM_CATEGORIES).map((cat, i) => (
+                            <Link
+                                key={i}
+                                href={cat.href}
+                                className="p-6 flex items-center justify-center text-center font-tech text-sm font-bold uppercase tracking-wider text-white hover:bg-[#FF00D6]/15 hover:text-[#00F0FF] transition-colors border-b border-r border-white/10"
+                            >
+                                {cat.name}
+                            </Link>
+                        ))}
                     </div>
                 </div>
+
             </div>
         </section>
     );

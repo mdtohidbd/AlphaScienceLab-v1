@@ -12,7 +12,7 @@ const config: Config = {
                 primary: "#962E9B",
                 secondary: "#3D1022",
                 accent: "#3D7FFF",
-                background: "#000000",
+                background: "#0A041A",
                 foreground: "#ffffff",
             },
             fontFamily: {

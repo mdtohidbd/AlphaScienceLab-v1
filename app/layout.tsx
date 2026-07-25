@@ -43,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${bakbak.variable} ${anton.variable} ${aldrich.variable} antialiased bg-black text-white`}
+        className={`${inter.variable} ${bakbak.variable} ${anton.variable} ${aldrich.variable} antialiased bg-[#0A041A] text-white`}
         suppressHydrationWarning
       >
         <PreloaderProvider>
